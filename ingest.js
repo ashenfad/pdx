@@ -140,18 +140,22 @@ function ingest(file, download, callback, progress) {
         }
 
         Papa.parse(file, {
-            worker: true,
+            worker: false,
             delimiter: ",",
             download: download,
             dynamicTyping: true,
             skipEmptyLines: true,
-	    chunk: ingestChunk,
-            complete: finalize
+	    complete: function (results) {
+                ingestChunk(results);
+                finalize();
+            }
+	    /* chunk: ingestChunk,
+               complete: finalize */
         });
     }
 
     Papa.parse(file, {
-        worker: true,
+        worker: false,
         delimiter: ",",
         download: download,
         preview: PREVIEW_SIZE,
