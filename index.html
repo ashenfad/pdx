@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title></title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
+          rel="stylesheet">
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link rel="stylesheet" type="text/css" href="pdx.css">
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.18.0/mapbox-gl.css'
+          rel='stylesheet' />
+    <link rel="stylesheet" href="external/nouislider.min.css">
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.18.0/mapbox-gl.js'></script>
+    <script src='external/range.js'></script>
+    <script src='external/sort.js'></script>
+    <script src='external/within.js'></script>
+    <script src='external/kdbush.js'></script>
+    <script src='external/bitset.js'></script>
+    <script src='external/papaparse.min.js'></script>
+    <script src='ingest.js'></script>
+    <script src='external/nouislider.min.js'></script>
+    <script src='external/wNumb.js'></script>
+    <script src='external/jquery-2.2.4.min.js'></script>
+    <script src='external/jquery.query-object.js'></script>
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <div id="alert">
+        Initializing map...
+    </div>
+    <div id='sidebar'>
+        <div id='filters'>
+            <div class="selector">
+                <fieldset class="filter-group filter-group-top">
+                    <legend>Building Details</legend>
+                    <div class="filter-group-member filter-group-member-top">
+                        <div class="slide-line">
+                            <i class="material-icons">home</i>
+                            <div class="filter-select">
+                                <select id="home-type">
+                                    <option value="all" selected="selected">All homes</option>
+                                    <option value="single">Single family</option>
+                                    <option value="multi">Multi-familty</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">date_range</i>
+                            <label id="year-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="year-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="year-max" class="slide-val slide-val-right">-</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="filter-group">
+                    <legend>Minutes to Downtown</legend>
+                    <div class="filter-group-member filter-group-member-top">
+                        <div class="slide-line">
+                            <i class="material-icons">location_city</i>
+                            <div class="filter-select">
+                                <select id="downtown-type">
+                                    <option value="union">Union Station</option>
+                                    <option value="pioneer" selected="selected">Pioneer Square</option>
+                                    <option value="psu">PSU Urban Center</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">directions_bus</i>
+                            <label id="downtown-transit-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="downtown-transit-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="downtown-transit-max" class="slide-val slide-val-right">-</label>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">directions_bike</i>
+                            <label id="downtown-cycling-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="downtown-cycling-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="downtown-cycling-max" class="slide-val slide-val-right">-</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="filter-group">
+                    <legend>Minutes to Nearest Grocery</legend>
+                    <div class="filter-group-member filter-group-member-top">
+                        <div class="slide-line">
+                            <i class="material-icons">local_grocery_store</i>
+                            <div class="filter-select">
+                                <select id="grocery-type">
+                                    <option value="any" selected="selected">Any grocery store</option>
+                                    <option value="chain">Only large chains</option>
+                                    <option value="indie">Only independent or ethnic</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">directions_walk</i>
+                            <label id="grocery-walking-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="grocery-walking-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="grocery-walking-max" class="slide-val slide-val-right">-</label>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">directions_bike</i>
+                            <label id="grocery-cycling-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="grocery-cycling-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="grocery-cycling-max" class="slide-val slide-val-right">-</label>
+                    </div>
+                </fieldset>
+
+                <fieldset class="filter-group filter-group-bottom">
+                    <legend>Minutes to Neighborhood School</legend>
+                    <div class="filter-group-member filter-group-member-top">
+                        <div class="slide-line">
+                            <i class="material-icons">school</i>
+                            <div class="filter-select">
+                                <select id="school-type">
+                                    <option value="elementary" selected="selected">Elementary</option>
+                                    <option value="middle">Middle School</option>
+                                    <option value="high">High School</option>
+                                    <option value="all">All levels</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">directions_walk</i>
+                            <label id="school-walking-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="school-walking-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="school-walking-max" class="slide-val slide-val-right">-</label>
+                    </div>
+
+                    <div class="filter-group-member">
+                        <div class="slide-line">
+                            <i class="material-icons">directions_bike</i>
+                            <label id="school-cycling-min" class="slide-val slide-val-left">-</label>
+                            <div class="slide-wrapper">
+                                <div id="school-cycling-slider" class="slider" />
+                            </div>
+                        </div>
+                        <label id="school-cycling-max" class="slide-val slide-val-right">-</label>
+                    </div>
+                </fieldset>
+
+            </div>
+        </div>
+        <div id='info' hidden="true">
+            <div id="addresstext"></div>
+        </div>
+    </div>
+
+    <script>
+
+     var ccolor = '#ffa';
+     var clusterRadius = 1;
+     var pointRadius = 2;
+     var blur = 1;
+
+     mapboxgl.accessToken = 'pk.eyJ1IjoiYXNoZW5mYWQiLCJhIjoiY2lvMzY4Y3NqMWFzdXVhbTM0b2x6dHgwZiJ9.NIaE79-ogfd1lOiyAr6tUw';
+
+     function updateProgress(rowCount) {
+         console.log('ADAM - rowcount:', rowCount);
+     }
+
+     var map;
+     var data;
+     var arrays;
+
+     var lats;
+     var longs;
+     var years;
+     var homeTypes;
+     var downtownTransit;
+     var downtownCycling;
+     var groceryWalking;
+     var groceryCycling;
+
+     function getSet(param, dflt, num) {
+         var v = getParam(param);
+         if (v == "") {
+             v = dflt;
+         }
+         if (num) {
+             v = Number(v);
+         }
+         setParam(param, v);
+         return v;
+     }
+
+     var minYear;
+     var maxYear;
+     var globalYear = [1880, 2015];
+
+     var minTransit;
+     var maxTransit;
+     var minCycling;
+     var maxCycling;
+     var globalTransit = [1, 90];
+     var globalCycling = [1, 90];
+
+     var minGroceryWalking;
+     var maxGroceryWalking;
+     var minGroceryCycling;
+     var maxGroceryCycling;
+     var globalGroceryWalking = [1, 60];
+     var globalGroceryCycling = [1, 20];
+
+     var minSchoolWalking;
+     var maxSchoolWalking;
+     var minSchoolCycling;
+     var maxSchoolCycling;
+     var globalSchoolWalking = [1, 70];
+     var globalSchoolCycling = [1, 30];
+
+     var selectedDest;
+     var selectedHomeType;
+     var selectedGrocery;
+     var selectedSchool;
+
+     var kd;
+     var kdpts;
+     var visible;
+
+     var infoDiv = document.getElementById('info');
+     var alertDiv = document.getElementById('alert');
+
+     function initControls() {
+         minYear = getSet("y1", 1880, true);
+         maxYear = getSet("y2", 2015, true);
+         minTransit = getSet("dt1", 1, true);
+         maxTransit = getSet("dt2", 90, true);
+         minCycling = getSet("dc1", 1, true);
+         maxCycling = getSet("dc2", 90, true);
+
+         minGroceryWalking = getSet("gw1", 1, true);
+         maxGroceryWalking = getSet("gw2", 60, true);
+         minGroceryCycling = getSet("gc1", 1, true);
+         maxGroceryCycling = getSet("gc2", 20, true);
+
+         minSchoolWalking = getSet("sw1", 1, true);
+         maxSchoolWalking = getSet("sw2", 80, true);
+         minSchoolCycling = getSet("sc1", 1, true);
+         maxSchoolCycling = getSet("sc2", 30, true);
+
+         selectedDest = getSet("dest", "pioneer", false);
+         selectedHomeType = getSet("home", "all", false);
+         selectedGrocery = getSet("grocery", "any", false);
+         selectedSchool = getSet("school", "elementary", false);
+
+         var groceryType = document.getElementById('grocery-type');
+         groceryType.value = selectedGrocery;
+         groceryType.addEventListener("change", function (sel) {
+             selectedGrocery = groceryType.options[groceryType.selectedIndex].value;
+             setParam("grocery", selectedGrocery);
+             updateForSlider();
+         });
+
+         var schoolType = document.getElementById('school-type');
+         schoolType.value = selectedSchool;
+         schoolType.addEventListener("change", function (sel) {
+             selectedSchool = schoolType.options[schoolType.selectedIndex].value;
+             setParam("school", selectedSchool);
+             updateForSlider();
+         });
+
+         var downtownType = document.getElementById('downtown-type');
+         downtownType.value = selectedDest;
+         downtownType.addEventListener("change", function (sel) {
+             selectedDest = downtownType.options[downtownType.selectedIndex].value;
+             setParam("dest", selectedDest);
+             updateForSlider();
+         });
+
+         var homeType = document.getElementById('home-type');
+         homeType.value = selectedHomeType;
+         homeType.addEventListener("change", function (sel) {
+             selectedHomeType = homeType.options[homeType.selectedIndex].value;
+             setParam("home", selectedHomeType);
+             updateForSlider();
+         });
+
+         document.getElementById('year-min').innerHTML = minYear;
+         document.getElementById('year-max').innerHTML = maxYear;
+         var yearSlider = document.getElementById('year-slider');
+         noUiSlider.create(yearSlider, {
+	     start: [minYear, maxYear],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalYear[0],
+	         'max': globalYear[1]
+	     }
+         });
+         yearSlider.noUiSlider.on('slide', function(){
+             var range = yearSlider.noUiSlider.get();
+             document.getElementById('year-min').innerHTML = parseInt(range[0]);
+             document.getElementById('year-max').innerHTML = parseInt(range[1]);
+         });
+         yearSlider.noUiSlider.on('set', function(){
+             var range = yearSlider.noUiSlider.get();
+             minYear = range[0];
+             maxYear = range[1];
+             setParam("y1", Math.round(range[0]));
+             setParam("y2", Math.round(range[1]));
+             updateForSlider();
+         });
+
+         document.getElementById('downtown-transit-min').innerHTML = minTransit;
+         document.getElementById('downtown-transit-max').innerHTML = maxTransit;
+         var downtownTransitSlider = document.getElementById('downtown-transit-slider');
+         noUiSlider.create(downtownTransitSlider, {
+	     start: [minTransit, maxTransit],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalTransit[0],
+	         'max': globalTransit[1]
+	     }
+         });
+         downtownTransitSlider.noUiSlider.on('slide', function(){
+             var range = downtownTransitSlider.noUiSlider.get();
+             document.getElementById('downtown-transit-min').innerHTML = parseInt(range[0]);
+             document.getElementById('downtown-transit-max').innerHTML = parseInt(range[1]);
+         });
+         downtownTransitSlider.noUiSlider.on('set', function(){
+             var range = downtownTransitSlider.noUiSlider.get();
+             minTransit = range[0];
+             maxTransit = range[1];
+             setParam("dt1", Math.round(minTransit));
+             setParam("dt2", Math.round(maxTransit));
+             updateForSlider();
+         });
+
+         document.getElementById('downtown-cycling-min').innerHTML = minCycling;
+         document.getElementById('downtown-cycling-max').innerHTML = maxCycling;
+         var downtownCyclingSlider = document.getElementById('downtown-cycling-slider');
+         noUiSlider.create(downtownCyclingSlider, {
+	     start: [minCycling, maxCycling],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalCycling[0],
+	         'max': globalCycling[1]
+	     }
+         });
+         downtownCyclingSlider.noUiSlider.on('slide', function(){
+             var range = downtownCyclingSlider.noUiSlider.get();
+             document.getElementById('downtown-cycling-min').innerHTML = parseInt(range[0]);
+             document.getElementById('downtown-cycling-max').innerHTML = parseInt(range[1]);
+         });
+         downtownCyclingSlider.noUiSlider.on('set', function(){
+             var range = downtownCyclingSlider.noUiSlider.get();
+             minCycling = range[0];
+             maxCycling = range[1];
+             setParam("dc1", Math.round(minCycling));
+             setParam("dc2", Math.round(maxCycling));
+             updateForSlider();
+         });
+
+         document.getElementById('grocery-walking-min').innerHTML = minGroceryWalking;
+         document.getElementById('grocery-walking-max').innerHTML = maxGroceryWalking;
+         var groceryWalkingSlider = document.getElementById('grocery-walking-slider');
+         noUiSlider.create(groceryWalkingSlider, {
+	     start: [minGroceryWalking, maxGroceryWalking],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalGroceryWalking[0],
+	         'max': globalGroceryWalking[1]
+	     }
+         });
+         groceryWalkingSlider.noUiSlider.on('slide', function(){
+             var range = groceryWalkingSlider.noUiSlider.get();
+             document.getElementById('grocery-walking-min').innerHTML = parseInt(range[0]);
+             document.getElementById('grocery-walking-max').innerHTML = parseInt(range[1]);
+         });
+         groceryWalkingSlider.noUiSlider.on('set', function(){
+             var range = groceryWalkingSlider.noUiSlider.get();
+             minGroceryWalking = range[0];
+             maxGroceryWalking = range[1];
+             setParam("gw1", Math.round(minGroceryWalking));
+             setParam("gw2", Math.round(maxGroceryWalking));
+             updateForSlider();
+         });
+
+
+         document.getElementById('grocery-cycling-min').innerHTML = minGroceryCycling;
+         document.getElementById('grocery-cycling-max').innerHTML = maxGroceryCycling;
+         var groceryCyclingSlider = document.getElementById('grocery-cycling-slider');
+         noUiSlider.create(groceryCyclingSlider, {
+	     start: [minGroceryCycling, maxGroceryCycling],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalGroceryCycling[0],
+	         'max': globalGroceryCycling[1]
+	     }
+         });
+         groceryCyclingSlider.noUiSlider.on('slide', function(){
+             var range = groceryCyclingSlider.noUiSlider.get();
+             document.getElementById('grocery-cycling-min').innerHTML = parseInt(range[0]);
+             document.getElementById('grocery-cycling-max').innerHTML = parseInt(range[1]);
+         });
+         groceryCyclingSlider.noUiSlider.on('set', function(){
+             var range = groceryCyclingSlider.noUiSlider.get();
+             minGroceryCycling = range[0];
+             maxGroceryCycling = range[1];
+             setParam("gc1", Math.round(minGroceryCycling));
+             setParam("gc2", Math.round(maxGroceryCycling));
+             updateForSlider();
+         });
+
+         document.getElementById('school-walking-min').innerHTML = minSchoolWalking;
+         document.getElementById('school-walking-max').innerHTML = maxSchoolWalking;
+         var schoolWalkingSlider = document.getElementById('school-walking-slider');
+         noUiSlider.create(schoolWalkingSlider, {
+	     start: [minSchoolWalking, maxSchoolWalking],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalSchoolWalking[0],
+	         'max': globalSchoolWalking[1]
+	     }
+         });
+         schoolWalkingSlider.noUiSlider.on('slide', function(){
+             var range = schoolWalkingSlider.noUiSlider.get();
+             document.getElementById('school-walking-min').innerHTML = parseInt(range[0]);
+             document.getElementById('school-walking-max').innerHTML = parseInt(range[1]);
+         });
+         schoolWalkingSlider.noUiSlider.on('set', function(){
+             var range = schoolWalkingSlider.noUiSlider.get();
+             minSchoolWalking = range[0];
+             maxSchoolWalking = range[1];
+             setParam("sw1", Math.round(minSchoolWalking));
+             setParam("sw2", Math.round(maxSchoolWalking));
+             updateForSlider();
+         });
+
+         document.getElementById('school-cycling-min').innerHTML = minSchoolCycling;
+         document.getElementById('school-cycling-max').innerHTML = maxSchoolCycling;
+         var schoolCyclingSlider = document.getElementById('school-cycling-slider');
+         noUiSlider.create(schoolCyclingSlider, {
+	     start: [minSchoolCycling, maxSchoolCycling],
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': globalSchoolCycling[0],
+	         'max': globalSchoolCycling[1]
+	     }
+         });
+         schoolCyclingSlider.noUiSlider.on('slide', function(){
+             var range = schoolCyclingSlider.noUiSlider.get();
+             document.getElementById('school-cycling-min').innerHTML = parseInt(range[0]);
+             document.getElementById('school-cycling-max').innerHTML = parseInt(range[1]);
+         });
+         schoolCyclingSlider.noUiSlider.on('set', function(){
+             var range = schoolCyclingSlider.noUiSlider.get();
+             minSchoolCycling = range[0];
+             maxSchoolCycling = range[1];
+             setParam("sc1", Math.round(minSchoolCycling));
+             setParam("sc2", Math.round(maxSchoolCycling));
+             updateForSlider();
+         });
+     }
+
+     function updateForSlider() {
+         var ids = [];
+         var homeType = -1;
+         if (selectedHomeType == "single") {
+             homeType = 0;
+         } else if (selectedHomeType == "multi") {
+             homeType = 1;
+         }
+
+         if (selectedDest == "pioneer") {
+             downtownTransit = arrays[7];
+             downtownCycling = arrays[10];
+         } else if (selectedDest == "union") {
+             downtownTransit = arrays[8];
+             downtownCycling = arrays[11];
+         } else if (selectedDest == "psu") {
+             downtownTransit = arrays[9];
+             downtownCycling = arrays[12];
+         }
+
+         for (var i = 0; i < years.length; i++) {
+             var gWalking;
+             var gCycling;
+             if (selectedGrocery == "indie") {
+                 gWalking = groceryWalkingIndie[i];
+                 gCycling = groceryCyclingIndie[i];
+             } else if (selectedGrocery == "chain") {
+                 gWalking = groceryWalkingChain[i];
+                 gCycling = groceryCyclingChain[i];
+             } else {
+                 gWalking = Math.min(groceryWalkingIndie[i], groceryWalkingChain[i]);
+                 gCycling = Math.min(groceryCyclingIndie[i], groceryCyclingChain[i]);
+             }
+
+             var sWalking;
+             var sCycling;
+             if (selectedSchool == "elementary") {
+                 sWalking = elementaryWalking[i];
+                 sCycling = elementaryCycling[i];
+             } else if (selectedSchool == "middle") {
+                 sWalking = middleWalking[i];
+                 sCycling = middleCycling[i];
+             } else if (selectedSchool == "high") {
+                 sWalking = highWalking[i];
+                 sCycling = highCycling[i];
+             } else {
+                 sWalking = Math.max(elementaryWalking[i], middleWalking[i], highWalking[i]);
+                 sCycling = Math.max(elementaryCycling[i], middleCycling[i], highCycling[i]);
+             }
+
+             if (years[i] >= minYear && years[i] <= maxYear
+                 && downtownTransit[i] >= minTransit && downtownTransit[i] <= maxTransit
+                 && downtownCycling[i] > 0
+                 && downtownCycling[i] + 2 >= minCycling
+                 && downtownCycling[i] + 2 <= maxCycling
+                 && (homeType == -1 || homeType == homeTypes[i])
+                 && gWalking >= minGroceryWalking && gWalking <= maxGroceryWalking
+                 && gCycling > 0
+                 && gCycling + 2 >= minGroceryCycling
+                 && gCycling + 2 <= maxGroceryCycling
+                 && sWalking >= minSchoolWalking && sWalking <= maxSchoolWalking
+                 && sCycling > 0
+                 && sCycling + 2 >= minSchoolCycling
+                 && sCycling + 2 <= maxSchoolCycling)
+             {
+                 ids.push(i);
+             }
+         }
+         refreshData(ids);
+     }
+
+     var addressText = document.getElementById('addresstext');
+
+     function initialize(fields, initArrays) {
+         arrays = initArrays;
+
+         longs = arrays[0];
+         lats = arrays[1];
+         address = arrays[2];
+         homeTypes = arrays[3];
+
+         years = arrays[6];
+         downtownTransit = arrays[7];
+         downtownCycling = arrays[10];
+
+         groceryWalkingChain = arrays[14];
+         groceryCyclingChain = arrays[15];
+         groceryWalkingIndie = arrays[17];
+         groceryCyclingIndie = arrays[18];
+
+         highWalking = arrays[20];
+         highCycling = arrays[21];
+
+         middleWalking = arrays[23];
+         middleCycling = arrays[24];
+
+         elementaryWalking = arrays[26];
+         elementaryCycling = arrays[27];
+
+         initControls();
+         makeMap();
+     }
+
+     function makeFeature(id) {
+         return {type: 'Feature',
+                 geometry: {type: 'Point',
+                            coordinates: [longs[id], lats[id]]},
+                 properties: {title: address[id],
+                              year: years[id],
+                              downtownTransit: downtownTransit[id]}};
+     }
+
+     function makeFeatures(ids) {
+         var features = [];
+         for (i in ids) {
+             features.push(makeFeature(ids[i]));
+         }
+         return {type: 'FeatureCollection',
+                 features: features};
+     }
+
+     function rangeArr(val) {
+         return Array.from(new Array(val), (x,i) => i);
+     }
+
+     function refreshData(ids) {
+         visible = new BitSet();
+         for (var i = 0; i < ids.length; i++) {
+             visible.set(ids[i]);
+         }
+         var features = makeFeatures(ids);
+         /* console.log("alert on");
+            alertDiv.hidden = false; */
+         data.setData(features);
+     }
+
+     function lngX(lng) {
+         return lng / 360 + 0.5;
+     }
+     function latY(lat) {
+         var sin = Math.sin(lat * Math.PI / 180),
+             y = (0.5 - 0.25 * Math.log((1 + sin) / (1 - sin)) / Math.PI);
+         return y < 0 ? 0 :
+                y > 1 ? 1 : y;
+     }
+
+     function initData() {
+         data = new mapboxgl.GeoJSONSource(
+             {data: [],
+              cluster: true,
+              clusterMaxZoom: 14,
+              clusterRadius: clusterRadius});
+
+         updateForSlider();
+
+         kdpts = [];
+         for (var i = 0; i < lats.length; i++) {
+             kdpts.push([lngX(longs[i]), latY(lats[i])]);
+         }
+         kd = kdbush(kdpts);
+
+         map.addSource('pointSource', data);
+         map.addLayer({
+             id: 'pointLayer',
+             type: 'circle',
+             source: 'pointSource',
+             paint: {'circle-color': ccolor,
+                     'circle-radius': {
+                         stops: [[14, 2], [18, 6]]
+                     },
+                     'circle-blur': blur}
+         });
+     }
+
+     function sqrDist(x, y, i) {
+         var pt = kdpts[i];
+         var xDiff = x - pt[0];
+         var yDiff = y - pt[1];
+         return (xDiff * xDiff) + (yDiff * yDiff);
+     }
+
+     function makeMap() {
+         var lng = getSet("lng", -122.5976);
+         var lat = getSet("lat", 45.5235);
+         var z = getSet("z", 11.54);
+
+         map = new mapboxgl.Map({
+             container: 'map', // container id
+             style: 'mapbox://styles/ashenfad/cio37ctbg0037aenfc0q91jxc', //hosted style id
+             center: [lng, lat],
+             zoom: z
+         });
+
+         map.getCanvas().style.cursor = "default";
+
+         map.on("load", function() {
+             console.log("alert off");
+             alertDiv.hidden = true;
+         });
+
+         map.on("zoomend", function() {
+             setParam("z", map.getZoom());
+         });
+
+         map.on("dragend", function() {
+             var center = map.getCenter();
+             setParam("lng", center.lng);
+             setParam("lat", center.lat);
+         });
+
+         map.on('mousemove', function (e) {
+             var coord = map.unproject([e.point.x, e.point.y]);
+             var searchR = 25 / (512 * Math.pow(2, map.getZoom()));
+             var x = lngX(coord.lng);
+             var y = latY(coord.lat);
+             var candidates = kd.within(x, y, searchR);
+             var visCandidates = [];
+             for (var i = 0; i < candidates.length; i++) {
+                 if (visible.get(candidates[i])) {
+                     visCandidates.push(candidates[i]);
+                 }
+             }
+             candidates = visCandidates;
+
+             if (candidates.length > 0) {
+                 var minCandidate;
+                 var minVal = 999999;
+                 for (var i = 0; i < candidates.length; i++) {
+                     var candidate = candidates[i];
+                     var dist = sqrDist(x, y, candidate);
+                     if (dist < minVal) {
+                         minVal = dist;
+                         minCandidate = candidate;
+                     }
+                 }
+                 addressText.innerHTML = address[minCandidate];
+                 infoDiv.hidden = false;
+             } else {
+                 addressText.innerHTML = "";
+                 infoDiv.hidden = true;
+             }
+
+
+         });
+
+         map.on('style.load', initData);
+     }
+
+     ingest('../data.csv', true, initialize, updateProgress);
+
+
+     function getParam(key) {
+         return $.query.get(key);
+     }
+
+     function setParam(key, value) {
+         var newQuery = $.query.SET(key, value).toString();
+         window.history.replaceState({}, "", window.location.href.split('?')[0] + newQuery);
+     }
+
+</script>
+</body>
+</html>
