@@ -578,6 +578,15 @@
 
      var addressText = document.getElementById('addresstext');
 
+     function resetMissing(arr, val) {
+         for (i in arr) {
+             if (arr[i] == -1) {
+                 arr[i] = val;
+             }
+         }
+         return arr;
+     }
+
      function initialize(fields, initArrays) {
          arrays = initArrays;
 
@@ -587,22 +596,22 @@
          homeTypes = arrays[3];
 
          years = arrays[6];
-         downtownTransit = arrays[7];
-         downtownCycling = arrays[10];
+         downtownTransit = resetMissing(arrays[7], 9999);
+         downtownCycling = resetMissing(arrays[10], 9999);
 
-         groceryWalkingChain = arrays[14];
-         groceryCyclingChain = arrays[15];
-         groceryWalkingIndie = arrays[17];
-         groceryCyclingIndie = arrays[18];
+         groceryWalkingChain = resetMissing(arrays[14], 9999);
+         groceryCyclingChain = resetMissing(arrays[15], 9999);
+         groceryWalkingIndie = resetMissing(arrays[17], 9999);
+         groceryCyclingIndie = resetMissing(arrays[18], 9999);
 
-         highWalking = arrays[20];
-         highCycling = arrays[21];
+         highWalking = resetMissing(arrays[20], 9999);
+         highCycling = resetMissing(arrays[21], 9999);
 
-         middleWalking = arrays[23];
-         middleCycling = arrays[24];
+         middleWalking = resetMissing(arrays[23], 9999);
+         middleCycling = resetMissing(arrays[24], 9999);
 
-         elementaryWalking = arrays[26];
-         elementaryCycling = arrays[27];
+         elementaryWalking = resetMissing(arrays[26], 9999);
+         elementaryCycling = resetMissing(arrays[27], 9999);
 
          initControls();
          makeMap();
@@ -703,6 +712,40 @@
          map.on("load", function() {
              console.log("alert off");
              alertDiv.hidden = true;
+
+             map.on('mousemove', function (e) {
+                 var coord = map.unproject([e.point.x, e.point.y]);
+                 var searchR = 25 / (512 * Math.pow(2, map.getZoom()));
+                 var x = lngX(coord.lng);
+                 var y = latY(coord.lat);
+                 var candidates = kd.within(x, y, searchR);
+                 var visCandidates = [];
+                 for (var i = 0; i < candidates.length; i++) {
+                     if (visible.get(candidates[i])) {
+                         visCandidates.push(candidates[i]);
+                     }
+                 }
+                 candidates = visCandidates;
+
+                 if (candidates.length > 0) {
+                     var minCandidate;
+                     var minVal = 999999;
+                     for (var i = 0; i < candidates.length; i++) {
+                         var candidate = candidates[i];
+                         var dist = sqrDist(x, y, candidate);
+                         if (dist < minVal) {
+                             minVal = dist;
+                             minCandidate = candidate;
+                         }
+                     }
+                     addressText.innerHTML = address[minCandidate];
+                     infoDiv.hidden = false;
+                 } else {
+                     addressText.innerHTML = "";
+                     infoDiv.hidden = true;
+                 }
+
+             });
          });
 
          map.on("zoomend", function() {
@@ -713,40 +756,6 @@
              var center = map.getCenter();
              setParam("lng", center.lng);
              setParam("lat", center.lat);
-         });
-
-         map.on('mousemove', function (e) {
-             var coord = map.unproject([e.point.x, e.point.y]);
-             var searchR = 25 / (512 * Math.pow(2, map.getZoom()));
-             var x = lngX(coord.lng);
-             var y = latY(coord.lat);
-             var candidates = kd.within(x, y, searchR);
-             var visCandidates = [];
-             for (var i = 0; i < candidates.length; i++) {
-                 if (visible.get(candidates[i])) {
-                     visCandidates.push(candidates[i]);
-                 }
-             }
-             candidates = visCandidates;
-
-             if (candidates.length > 0) {
-                 var minCandidate;
-                 var minVal = 999999;
-                 for (var i = 0; i < candidates.length; i++) {
-                     var candidate = candidates[i];
-                     var dist = sqrDist(x, y, candidate);
-                     if (dist < minVal) {
-                         minVal = dist;
-                         minCandidate = candidate;
-                     }
-                 }
-                 addressText.innerHTML = address[minCandidate];
-                 infoDiv.hidden = false;
-             } else {
-                 addressText.innerHTML = "";
-                 infoDiv.hidden = true;
-             }
-
          });
 
          map.on('style.load', initData);
