@@ -244,8 +244,8 @@
      var maxSchoolWalking;
      var minSchoolCycling;
      var maxSchoolCycling;
-     var globalSchoolWalking = [1, 70];
-     var globalSchoolCycling = [1, 30];
+     var globalSchoolWalking = [1, 140];
+     var globalSchoolCycling = [1, 50];
 
      var selectedDest;
      var selectedHomeType;
@@ -539,20 +539,30 @@
                  gCycling = Math.min(groceryCyclingIndie[i], groceryCyclingChain[i]);
              }
 
-             var sWalking;
-             var sCycling;
+             var sWalkingMin;
+             var sWalkingMax;
+             var sCyclingMin;
+             var sCyclingMax;
              if (selectedSchool == "elementary") {
-                 sWalking = elementaryWalking[i];
-                 sCycling = elementaryCycling[i];
+                 sWalkingMax = elementaryWalking[i];
+                 sCyclingMax = elementaryCycling[i];
+                 sWalkingMin = sWalkingMax;
+                 sCyclingMin = sCyclingMax;
              } else if (selectedSchool == "middle") {
-                 sWalking = middleWalking[i];
-                 sCycling = middleCycling[i];
+                 sWalkingMax = middleWalking[i];
+                 sCyclingMax = middleCycling[i];
+                 sWalkingMin = sWalkingMax;
+                 sCyclingMin = sCyclingMax;
              } else if (selectedSchool == "high") {
-                 sWalking = highWalking[i];
-                 sCycling = highCycling[i];
+                 sWalkingMax = highWalking[i];
+                 sCyclingMax = highCycling[i];
+                 sWalkingMin = sWalkingMax;
+                 sCyclingMin = sCyclingMax;
              } else {
-                 sWalking = Math.max(elementaryWalking[i], middleWalking[i], highWalking[i]);
-                 sCycling = Math.max(elementaryCycling[i], middleCycling[i], highCycling[i]);
+                 sWalkingMax = Math.max(elementaryWalking[i], middleWalking[i], highWalking[i]);
+                 sCyclingMax = Math.max(elementaryCycling[i], middleCycling[i], highCycling[i]);
+                 sWalkingMin = Math.min(elementaryWalking[i], middleWalking[i], highWalking[i]);
+                 sCyclingMin = Math.min(elementaryCycling[i], middleCycling[i], highCycling[i]);
              }
 
              if (years[i] >= minYear && years[i] <= maxYear
@@ -565,10 +575,10 @@
                  && gCycling > 0
                  && gCycling + 2 >= minGroceryCycling
                  && gCycling + 2 <= maxGroceryCycling
-                 && sWalking >= minSchoolWalking && sWalking <= maxSchoolWalking
-                 && sCycling > 0
-                 && sCycling + 2 >= minSchoolCycling
-                 && sCycling + 2 <= maxSchoolCycling)
+                 && sWalkingMin >= minSchoolWalking && sWalkingMax <= maxSchoolWalking
+                 && sCyclingMin > 0
+                 && sCyclingMin + 2 >= minSchoolCycling
+                 && sCyclingMax + 2 <= maxSchoolCycling)
              {
                  ids.push(i);
              }
