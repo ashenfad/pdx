@@ -636,7 +636,8 @@
      }
 
      function rangeArr(val) {
-         return Array.from(new Array(val), (x,i) => i);
+         return Array.from(new Array(val),
+                           function (x, i) {return i;});
      }
 
      function refreshData(ids) {
