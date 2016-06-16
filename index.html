@@ -22,6 +22,7 @@
     <script src='wNumb.js'></script>
     <script src='jquery-2.2.4.min.js'></script>
     <script src='jquery.query-object.js'></script>
+
     <style>
         body { margin:0; padding:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -39,7 +40,7 @@
                     <legend>Building Details</legend>
                     <div class="filter-group-member filter-group-member-top">
                         <div class="slide-line">
-                            <i class="material-icons">home</i>
+                            <i class="material-icons" title="Home Type">home</i>
                             <div class="filter-select">
                                 <select id="home-type">
                                     <option value="all" selected="selected">All homes</option>
@@ -52,7 +53,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">date_range</i>
+                            <i class="material-icons" title="Year Built">date_range</i>
                             <label id="year-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="year-slider" class="slider" />
@@ -66,7 +67,7 @@
                     <legend>Minutes to Downtown</legend>
                     <div class="filter-group-member filter-group-member-top">
                         <div class="slide-line">
-                            <i class="material-icons">location_city</i>
+                            <i class="material-icons" title="Downtown Destination">location_city</i>
                             <div class="filter-select">
                                 <select id="downtown-type">
                                     <option value="union">Union Station</option>
@@ -79,7 +80,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">directions_bus</i>
+                            <i class="material-icons" title="Transit Time">directions_bus</i>
                             <label id="downtown-transit-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="downtown-transit-slider" class="slider" />
@@ -90,7 +91,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">directions_bike</i>
+                            <i class="material-icons" title="Cycling Time">directions_bike</i>
                             <label id="downtown-cycling-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="downtown-cycling-slider" class="slider" />
@@ -104,7 +105,7 @@
                     <legend>Minutes to Nearest Grocery</legend>
                     <div class="filter-group-member filter-group-member-top">
                         <div class="slide-line">
-                            <i class="material-icons">local_grocery_store</i>
+                            <i class="material-icons" title="Grocery Type">local_grocery_store</i>
                             <div class="filter-select">
                                 <select id="grocery-type">
                                     <option value="any" selected="selected">Any grocery store</option>
@@ -117,7 +118,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">directions_walk</i>
+                            <i class="material-icons" title="Walking Time">directions_walk</i>
                             <label id="grocery-walking-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="grocery-walking-slider" class="slider" />
@@ -128,7 +129,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">directions_bike</i>
+                            <i class="material-icons" title="Cycling Time">directions_bike</i>
                             <label id="grocery-cycling-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="grocery-cycling-slider" class="slider" />
@@ -142,7 +143,7 @@
                     <legend>Minutes to Neighborhood School</legend>
                     <div class="filter-group-member filter-group-member-top">
                         <div class="slide-line">
-                            <i class="material-icons">school</i>
+                            <i class="material-icons" title="School Type">school</i>
                             <div class="filter-select">
                                 <select id="school-type">
                                     <option value="elementary" selected="selected">Elementary</option>
@@ -156,7 +157,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">directions_walk</i>
+                            <i class="material-icons" title="Walking Time">directions_walk</i>
                             <label id="school-walking-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="school-walking-slider" class="slider" />
@@ -167,7 +168,7 @@
 
                     <div class="filter-group-member">
                         <div class="slide-line">
-                            <i class="material-icons">directions_bike</i>
+                            <i class="material-icons" title="Cycling Time">directions_bike</i>
                             <label id="school-cycling-min" class="slide-val slide-val-left">-</label>
                             <div class="slide-wrapper">
                                 <div id="school-cycling-slider" class="slider" />
