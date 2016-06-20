@@ -195,7 +195,7 @@
      mapboxgl.accessToken = 'pk.eyJ1IjoiYXNoZW5mYWQiLCJhIjoiY2lvMzY4Y3NqMWFzdXVhbTM0b2x6dHgwZiJ9.NIaE79-ogfd1lOiyAr6tUw';
 
      function updateProgress(rowCount) {
-         console.log('ADAM - rowcount:', rowCount);
+         /* console.log('ADAM - rowcount:', rowCount); */
      }
 
      var map;
@@ -211,6 +211,23 @@
      var groceryWalking;
      var groceryCycling;
 
+     function setPair(param, vals) {
+         setParam(param, vals[0] + "-" + vals[1]);
+     }
+
+     function getSetPair(param, dflt) {
+         var vs = getParam(param);
+         if (vs == "") {
+             vs = dflt;
+         } else {
+             vs = vs.split("-");
+             vs[0] = Number(vs[0]);
+             vs[1] = Number(vs[1]);
+         }
+         setPair(param, vs);
+         return vs;
+     }
+
      function getSet(param, dflt, num) {
          var v = getParam(param);
          if (v == "") {
@@ -223,28 +240,21 @@
          return v;
      }
 
-     var minYear;
-     var maxYear;
+     var currentYear;
      var globalYear = [1880, 2015];
 
-     var minTransit;
-     var maxTransit;
-     var minCycling;
-     var maxCycling;
+     var currentDowntownTransit;
+     var currentDowntownCycling;
      var globalTransit = [1, 90];
      var globalCycling = [1, 90];
 
-     var minGroceryWalking;
-     var maxGroceryWalking;
-     var minGroceryCycling;
-     var maxGroceryCycling;
+     var currentGroceryWalking;
+     var currentGroceryCycling;
      var globalGroceryWalking = [1, 60];
      var globalGroceryCycling = [1, 20];
 
-     var minSchoolWalking;
-     var maxSchoolWalking;
-     var minSchoolCycling;
-     var maxSchoolCycling;
+     var currentSchoolWalking;
+     var currentSchoolCycling;
      var globalSchoolWalking = [1, 140];
      var globalSchoolCycling = [1, 50];
 
@@ -260,23 +270,47 @@
      var infoDiv = document.getElementById('info');
      var alertDiv = document.getElementById('alert');
 
+     function makeSlider(id, param, overallRange, currentRange) {
+         var minId = id + '-min';
+         var maxId = id + '-max';
+         document.getElementById(minId).innerHTML = currentRange[0];
+         document.getElementById(maxId).innerHTML = currentRange[1];
+         var slider = document.getElementById(id + '-slider');
+         noUiSlider.create(slider, {
+	     start: currentRange,
+             step: 1,
+             connect: true,
+             behaviour: 'drag',
+	     range: {
+	         'min': overallRange[0],
+	         'max': overallRange[1]
+	     }
+         });
+         slider.noUiSlider.on('slide', function(){
+             var range = slider.noUiSlider.get();
+             document.getElementById(minId).innerHTML = parseInt(range[0]);
+             document.getElementById(maxId).innerHTML = parseInt(range[1]);
+         });
+         slider.noUiSlider.on('set', function(){
+             var range = slider.noUiSlider.get();
+             /* currentRange = range; */
+             currentRange[0] = range[0];
+             currentRange[1] = range[1];
+             setParam(param, Math.round(range[0]) + "-" + Math.round(range[1]));
+             updateForSlider();
+         });
+
+         return slider;
+     }
+
      function initControls() {
-         minYear = getSet("y1", 1880, true);
-         maxYear = getSet("y2", 2015, true);
-         minTransit = getSet("dt1", 1, true);
-         maxTransit = getSet("dt2", 90, true);
-         minCycling = getSet("dc1", 1, true);
-         maxCycling = getSet("dc2", 90, true);
-
-         minGroceryWalking = getSet("gw1", 1, true);
-         maxGroceryWalking = getSet("gw2", 60, true);
-         minGroceryCycling = getSet("gc1", 1, true);
-         maxGroceryCycling = getSet("gc2", 20, true);
-
-         minSchoolWalking = getSet("sw1", 1, true);
-         maxSchoolWalking = getSet("sw2", 80, true);
-         minSchoolCycling = getSet("sc1", 1, true);
-         maxSchoolCycling = getSet("sc2", 30, true);
+         currentYear = getSetPair("y", globalYear);
+         currentDowntownTransit = getSetPair("dt", globalTransit);
+         currentDowntownCycling = getSetPair("dc", globalCycling);
+         currentGroceryWalking = getSetPair("gw", globalGroceryWalking);
+         currentGroceryCycling = getSetPair("gc", globalGroceryCycling);
+         currentSchoolWalking = getSetPair("sw", globalSchoolWalking);
+         currentSchoolCycling = getSetPair("sc", globalSchoolCycling);
 
          selectedDest = getSet("dest", "pioneer", false);
          selectedHomeType = getSet("home", "all", false);
@@ -315,195 +349,17 @@
              updateForSlider();
          });
 
-         document.getElementById('year-min').innerHTML = minYear;
-         document.getElementById('year-max').innerHTML = maxYear;
-         var yearSlider = document.getElementById('year-slider');
-         noUiSlider.create(yearSlider, {
-	     start: [minYear, maxYear],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalYear[0],
-	         'max': globalYear[1]
-	     }
-         });
-         yearSlider.noUiSlider.on('slide', function(){
-             var range = yearSlider.noUiSlider.get();
-             document.getElementById('year-min').innerHTML = parseInt(range[0]);
-             document.getElementById('year-max').innerHTML = parseInt(range[1]);
-         });
-         yearSlider.noUiSlider.on('set', function(){
-             var range = yearSlider.noUiSlider.get();
-             minYear = range[0];
-             maxYear = range[1];
-             setParam("y1", Math.round(range[0]));
-             setParam("y2", Math.round(range[1]));
-             updateForSlider();
-         });
+         makeSlider('year', 'y', globalYear, currentYear);
+         makeSlider('downtown-transit', 'dt', globalTransit, currentDowntownTransit);
+         makeSlider('downtown-cycling', 'dc', globalCycling, currentDowntownCycling);
+         makeSlider('grocery-walking', 'gw', globalGroceryWalking, currentGroceryWalking);
+         makeSlider('grocery-cycling', 'gc', globalGroceryCycling, currentGroceryCycling);
+         makeSlider('school-walking', 'sw', globalSchoolWalking, currentSchoolWalking);
+         makeSlider('school-cycling', 'sc', globalSchoolCycling, currentSchoolCycling);
+     }
 
-         document.getElementById('downtown-transit-min').innerHTML = minTransit;
-         document.getElementById('downtown-transit-max').innerHTML = maxTransit;
-         var downtownTransitSlider = document.getElementById('downtown-transit-slider');
-         noUiSlider.create(downtownTransitSlider, {
-	     start: [minTransit, maxTransit],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalTransit[0],
-	         'max': globalTransit[1]
-	     }
-         });
-         downtownTransitSlider.noUiSlider.on('slide', function(){
-             var range = downtownTransitSlider.noUiSlider.get();
-             document.getElementById('downtown-transit-min').innerHTML = parseInt(range[0]);
-             document.getElementById('downtown-transit-max').innerHTML = parseInt(range[1]);
-         });
-         downtownTransitSlider.noUiSlider.on('set', function(){
-             var range = downtownTransitSlider.noUiSlider.get();
-             minTransit = range[0];
-             maxTransit = range[1];
-             setParam("dt1", Math.round(minTransit));
-             setParam("dt2", Math.round(maxTransit));
-             updateForSlider();
-         });
-
-         document.getElementById('downtown-cycling-min').innerHTML = minCycling;
-         document.getElementById('downtown-cycling-max').innerHTML = maxCycling;
-         var downtownCyclingSlider = document.getElementById('downtown-cycling-slider');
-         noUiSlider.create(downtownCyclingSlider, {
-	     start: [minCycling, maxCycling],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalCycling[0],
-	         'max': globalCycling[1]
-	     }
-         });
-         downtownCyclingSlider.noUiSlider.on('slide', function(){
-             var range = downtownCyclingSlider.noUiSlider.get();
-             document.getElementById('downtown-cycling-min').innerHTML = parseInt(range[0]);
-             document.getElementById('downtown-cycling-max').innerHTML = parseInt(range[1]);
-         });
-         downtownCyclingSlider.noUiSlider.on('set', function(){
-             var range = downtownCyclingSlider.noUiSlider.get();
-             minCycling = range[0];
-             maxCycling = range[1];
-             setParam("dc1", Math.round(minCycling));
-             setParam("dc2", Math.round(maxCycling));
-             updateForSlider();
-         });
-
-         document.getElementById('grocery-walking-min').innerHTML = minGroceryWalking;
-         document.getElementById('grocery-walking-max').innerHTML = maxGroceryWalking;
-         var groceryWalkingSlider = document.getElementById('grocery-walking-slider');
-         noUiSlider.create(groceryWalkingSlider, {
-	     start: [minGroceryWalking, maxGroceryWalking],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalGroceryWalking[0],
-	         'max': globalGroceryWalking[1]
-	     }
-         });
-         groceryWalkingSlider.noUiSlider.on('slide', function(){
-             var range = groceryWalkingSlider.noUiSlider.get();
-             document.getElementById('grocery-walking-min').innerHTML = parseInt(range[0]);
-             document.getElementById('grocery-walking-max').innerHTML = parseInt(range[1]);
-         });
-         groceryWalkingSlider.noUiSlider.on('set', function(){
-             var range = groceryWalkingSlider.noUiSlider.get();
-             minGroceryWalking = range[0];
-             maxGroceryWalking = range[1];
-             setParam("gw1", Math.round(minGroceryWalking));
-             setParam("gw2", Math.round(maxGroceryWalking));
-             updateForSlider();
-         });
-
-
-         document.getElementById('grocery-cycling-min').innerHTML = minGroceryCycling;
-         document.getElementById('grocery-cycling-max').innerHTML = maxGroceryCycling;
-         var groceryCyclingSlider = document.getElementById('grocery-cycling-slider');
-         noUiSlider.create(groceryCyclingSlider, {
-	     start: [minGroceryCycling, maxGroceryCycling],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalGroceryCycling[0],
-	         'max': globalGroceryCycling[1]
-	     }
-         });
-         groceryCyclingSlider.noUiSlider.on('slide', function(){
-             var range = groceryCyclingSlider.noUiSlider.get();
-             document.getElementById('grocery-cycling-min').innerHTML = parseInt(range[0]);
-             document.getElementById('grocery-cycling-max').innerHTML = parseInt(range[1]);
-         });
-         groceryCyclingSlider.noUiSlider.on('set', function(){
-             var range = groceryCyclingSlider.noUiSlider.get();
-             minGroceryCycling = range[0];
-             maxGroceryCycling = range[1];
-             setParam("gc1", Math.round(minGroceryCycling));
-             setParam("gc2", Math.round(maxGroceryCycling));
-             updateForSlider();
-         });
-
-         document.getElementById('school-walking-min').innerHTML = minSchoolWalking;
-         document.getElementById('school-walking-max').innerHTML = maxSchoolWalking;
-         var schoolWalkingSlider = document.getElementById('school-walking-slider');
-         noUiSlider.create(schoolWalkingSlider, {
-	     start: [minSchoolWalking, maxSchoolWalking],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalSchoolWalking[0],
-	         'max': globalSchoolWalking[1]
-	     }
-         });
-         schoolWalkingSlider.noUiSlider.on('slide', function(){
-             var range = schoolWalkingSlider.noUiSlider.get();
-             document.getElementById('school-walking-min').innerHTML = parseInt(range[0]);
-             document.getElementById('school-walking-max').innerHTML = parseInt(range[1]);
-         });
-         schoolWalkingSlider.noUiSlider.on('set', function(){
-             var range = schoolWalkingSlider.noUiSlider.get();
-             minSchoolWalking = range[0];
-             maxSchoolWalking = range[1];
-             setParam("sw1", Math.round(minSchoolWalking));
-             setParam("sw2", Math.round(maxSchoolWalking));
-             updateForSlider();
-         });
-
-         document.getElementById('school-cycling-min').innerHTML = minSchoolCycling;
-         document.getElementById('school-cycling-max').innerHTML = maxSchoolCycling;
-         var schoolCyclingSlider = document.getElementById('school-cycling-slider');
-         noUiSlider.create(schoolCyclingSlider, {
-	     start: [minSchoolCycling, maxSchoolCycling],
-             step: 1,
-             connect: true,
-             behaviour: 'drag',
-	     range: {
-	         'min': globalSchoolCycling[0],
-	         'max': globalSchoolCycling[1]
-	     }
-         });
-         schoolCyclingSlider.noUiSlider.on('slide', function(){
-             var range = schoolCyclingSlider.noUiSlider.get();
-             document.getElementById('school-cycling-min').innerHTML = parseInt(range[0]);
-             document.getElementById('school-cycling-max').innerHTML = parseInt(range[1]);
-         });
-         schoolCyclingSlider.noUiSlider.on('set', function(){
-             var range = schoolCyclingSlider.noUiSlider.get();
-             minSchoolCycling = range[0];
-             maxSchoolCycling = range[1];
-             setParam("sc1", Math.round(minSchoolCycling));
-             setParam("sc2", Math.round(maxSchoolCycling));
-             updateForSlider();
-         });
+     function inRange(range, val) {
+         return (val >= range[0] && val <= range[1]);
      }
 
      function updateForSlider() {
@@ -566,20 +422,19 @@
                  sCyclingMin = Math.min(elementaryCycling[i], middleCycling[i], highCycling[i]);
              }
 
-             if (years[i] >= minYear && years[i] <= maxYear
-                 && downtownTransit[i] >= minTransit && downtownTransit[i] <= maxTransit
+             if ((homeType == -1 || homeType == homeTypes[i])
+                 && inRange(currentYear, years[i])
+                 && inRange(currentDowntownTransit, downtownTransit[i])
                  && downtownCycling[i] > 0
-                 && downtownCycling[i] + 2 >= minCycling
-                 && downtownCycling[i] + 2 <= maxCycling
-                 && (homeType == -1 || homeType == homeTypes[i])
-                 && gWalking >= minGroceryWalking && gWalking <= maxGroceryWalking
+                 && inRange(currentDowntownCycling, downtownCycling[i] + 2)
+                 && inRange(currentGroceryWalking, gWalking)
                  && gCycling > 0
-                 && gCycling + 2 >= minGroceryCycling
-                 && gCycling + 2 <= maxGroceryCycling
-                 && sWalkingMin >= minSchoolWalking && sWalkingMax <= maxSchoolWalking
+                 && inRange(currentGroceryCycling, gCycling + 2)
+                 && inRange(currentSchoolWalking, sWalkingMin)
+                 && inRange(currentSchoolWalking, sWalkingMax)
                  && sCyclingMin > 0
-                 && sCyclingMin + 2 >= minSchoolCycling
-                 && sCyclingMax + 2 <= maxSchoolCycling)
+                 && inRange(currentSchoolCycling, sCyclingMin + 2)
+                 && inRange(currentSchoolCycling, sCyclingMax + 2))
              {
                  ids.push(i);
              }

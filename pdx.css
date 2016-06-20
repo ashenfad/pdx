@@ -17,6 +17,7 @@ body {
 
 .material-icons {
     margin-right: 5px;
+    cursor: default;
 }
 
 #sidebar {
@@ -37,7 +38,7 @@ legend {
     border:1px solid rgba(0,0,0,0.7);
     border-radius:5px;
     background:rgba(240,240,240,0.9);
-    padding: 5px;
+    padding: 3px;
 }
 
 #info {
@@ -95,18 +96,21 @@ legend {
     padding: 6px;
     padding-top: 0px;
     padding-bottom: 0px;
-    border-radius:3px;
-    border:1px solid rgba(0,0,0,0.2);
-    color: rgb(75, 75, 75);
+    border:none;
+    border-bottom:1px solid rgba(0,0,0,0.2);
+    /* border-radius:3px; */
+    /* border:1px solid rgba(0,0,0,0.2); */
+    /* color: rgb(75, 75, 75); */
     margin-bottom: 10px;
 }
 
 .filter-group-top {
-    margin-top: 2px;
+    margin-top: 8px;
 }
 
 .filter-group-bottom {
     margin-bottom: 3px;
+    border-bottom:none;
 }
 
 .filter-group-label {
