@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="pdx.css">
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.18.0/mapbox-gl.css'
           rel='stylesheet' />
-    <link rel="stylesheet" href="nouislider.min.css">
+    <link rel="stylesheet" href="nouislider.css">
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.18.0/mapbox-gl.js'></script>
     <script src='range.js'></script>
     <script src='sort.js'></script>
@@ -487,9 +487,7 @@
          return {type: 'Feature',
                  geometry: {type: 'Point',
                             coordinates: [longs[id], lats[id]]},
-                 properties: {title: address[id],
-                              year: years[id],
-                              downtownTransit: downtownTransit[id]}};
+                 properties: {year: years[id]}};
      }
 
      function makeFeatures(ids) {
@@ -547,11 +545,12 @@
              id: 'pointLayer',
              type: 'circle',
              source: 'pointSource',
-             paint: {'circle-color': ccolor,
-                     'circle-radius': {
-                         stops: [[14, 2], [18, 6]]
-                     },
-                     'circle-blur': blur}
+             paint: {
+                 'circle-color': ccolor,
+                 'circle-radius': {
+                     stops: [[14, 2], [18, 6]]
+                 },
+                 'circle-blur': blur}
          });
      }
 
@@ -569,7 +568,7 @@
 
          map = new mapboxgl.Map({
              container: 'map', // container id
-             style: 'mapbox://styles/ashenfad/cio37ctbg0037aenfc0q91jxc', //hosted style id
+             style: 'mapbox://styles/ashenfad/cio37ctbg0037aenfc0q91jxc',
              center: [lng, lat],
              zoom: z
          });
